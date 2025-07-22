@@ -1,0 +1,118 @@
+:root {
+  --color-background: #fefdfe;
+  --color-background-soft: #eee;
+  --color-background-mute: #ddd;
+  --color-background-invalid: #fee;
+  --color-background-semitransparent: rgba(255, 255, 255, 0.9);
+
+  --color-border: #aaa;
+  --color-border-hover: #eee;
+  --color-drop-shadow: rgba(0, 0, 0, 0.5);
+
+  --color-heading: #080008;
+  --color-text: #000;
+  --color-text-mute: #777;
+
+  --color-accent: #804080;
+  --color-accent-text: #fff;
+  --color-accent-text-btn: #603068;
+  --color-accent-mute: #a870a8;
+  --color-accent-deeper: #582858;
+  --color-accent-deepest: #402040;
+  --color-accent-background: #fffeff;
+  --color-accent-dimmed: rgba(0, 20, 20, 0.7);
+
+  --color-error: red;
+  --color-warning: orangered;
+  --color-indicator: #c35;
+
+  --color-bright-indicator: #63d023;
+  --color-dark-indicator: #427210;
+
+  /* Mimic Bootstrap alert with 'danger' variant */
+  --color-alert-danger: rgba(104, 35, 39, 1);
+  --color-alert-danger-background: rgba(243, 216, 218, 1);
+  --color-alert-danger-border: rgba(239, 199, 204, 1);
+
+  --section-gap: 160px;
+  --base-font-size: 15px;
+  --base-line-height: 1.5;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --color-background: #060206;
+  --color-background-soft: #333;
+  --color-background-mute: #222;
+  --color-background-invalid: #300;
+  --color-background-semitransparent: rgba(0, 0, 0, 0.75);
+
+  --color-border: #666;
+  --color-border-hover: #111;
+  --color-drop-shadow: rgba(200, 100, 200, 0.5);
+
+  --color-heading: #fff8ff;
+  --color-text: #fff;
+  --color-text-mute: #555;
+
+  --color-accent: #703070;
+  --color-accent-text: #fff;
+  --color-accent-text-btn: #a858a0;
+  --color-accent-mute: #646;
+  --color-accent-deeper: #502050;
+  --color-accent-deepest: #401040;
+  --color-accent-background: #011;
+  --color-accent-dimmed: rgba(0, 20, 20, 0.7);
+
+  --color-error: red;
+  --color-warning: orangered;
+  --color-indicator: #b25;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-background);
+  transition:
+    color 0.5s,
+    background-color 0.5s;
+  line-height: 2;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: var(--base-font-size);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: bold;
+  color: var(--color-heading);
+}
