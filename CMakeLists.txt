@@ -18,36 +18,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Scripts
-install(FILES
-      TC1.1_CreateSimpleScore.js
-      TC1.2_CreateSimpleScoreWithRandomInstruments.js
-      TC2_CreateSimpleScoreByTemplate.js
-      TC3_UsingNoteInputToolbar.js
-      TC4_UsingPalettes.js
-      TC5_UsingInstruments.js
-      TC6_UsingInspector_Note.js
-      TC7_UsingExport.js
-      TC8_EngravingText.js
-      "TC9_BigScore(perfomance).js"
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts
-      )
+file(GLOB TS_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.ts)
 
-# Steps
-install(FILES
-      steps/NewScore.js
-      steps/NoteInput.js
-      steps/Palette.js
-      steps/Score.js
-      steps/Instruments.js
-      steps/Inspector.js
-      steps/Navigation.js
-      steps/Home.js
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts/steps
-      )
+if (MUE_RUN_LRELEASE)
+    add_custom_target(translations ALL
+        COMMENT "Generating .qm files" VERBATIM
+    )
 
-# Date
+    qt_add_lrelease(translations TS_FILES ${TS_FILES} NO_GLOBAL_TARGET QM_FILES_OUTPUT_VARIABLE QM_FILES)
+endif()
+
 install(FILES
-      data/Big_Score.mscz
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts/data
-      )
+    ${CMAKE_CURRENT_LIST_DIR}/languages.json
+    ${QM_FILES}
+    DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}locale
+)
+
+install(DIRECTORY ${QT_INSTALL_PREFIX}/translations/
+    DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}locale
+    FILES_MATCHING
+    REGEX "qt_.*\\.qm"
+    REGEX "qt_help_.*\\.qm" EXCLUDE
+    REGEX "qtbase_.*\\.qm"
+    REGEX "qt*_en\\.qm" EXCLUDE)

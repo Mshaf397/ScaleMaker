@@ -1,93 +1,35 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick 2.15
 
-import Muse.Ui 1.0
-import Muse.UiComponents 1.0
-import Muse.WasmTest 1.0
+import MuseApi.Extensions 1.0
+import MuseApi.Controls 1.0
 
-Window {
+ExtensionBlank {
+
     id: root
 
-    width: 640
-    height: 480
-    visible: true
-    title: qsTr("Hello World")
+    implicitHeight: 400
+    implicitWidth: 400
 
-    MainWindowBridge {
-        id: bridge
-        window: root
+    color: api.theme.backgroundPrimaryColor
+
+    Component.onCompleted: {
+        api.log.info("Component.onCompleted from ext1")
     }
 
-    ToolTipProvider { }
-
-    InteractiveProvider {
-        id: interactiveProvider
-        topParent: root
+    StyledTextLabel {
+        id: label1
+        text: "Main 1"
     }
 
-    InteractiveTestModel {
-        id: itest
-    }
+    FlatButton {
+        id: btn1
+        anchors.top: label1.bottom
 
-    function openSyncDialog() {
-        console.log("onClicked openSyncDialog")
-        itest.openSyncDialog()
-    }
+        text: "Click me"
 
-    Column {
-        anchors.fill: parent
-        spacing: 16
-
-        FlatButton {
-            text: "Open async dialog"
-            onClicked: {
-                console.log("onClicked")
-                itest.openAsyncDialog()
-            }
-        }
-
-        FlatButton {
-            text: "Open sync dialog"
-            onClicked: {
-                //Qt.callLater(root.openSyncDialog)
-                root.openSyncDialog()
-            }
-        }
-
-        FlatButton {
-            text: "runLoop"
-            onClicked: {
-                console.log("onClicked runLoop")
-                var ret = itest.runLoop()
-                console.log("Proccess ret: ", ret)
-            }
-        }
-
-        FlatButton {
-            text: "exitLoop"
-            onClicked: {
-                console.log("onClicked exitLoop")
-                itest.exitLoop()
-            }
-        }
-
-        FlatButton {
-            text: "runSleep"
-            onClicked: {
-                console.log("onClicked runSleep")
-                var ret = itest.runSleep()
-                console.log("Proccess ret: ", ret)
-            }
-        }
-
-        FlatButton {
-            text: "exitSleep"
-            onClicked: {
-                console.log("onClicked exitSleep")
-                itest.exitSleep()
-            }
+        onClicked: {
+            api.interactive.info("Ext 1", "Clicked on Btn1")
         }
     }
+
 }
