@@ -18,13 +18,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# Scripts
 install(FILES
-      Fugue_1.mscx
-      Reunion.mscz
-      Unclaimed_Gift.mscx
-      Dynamic_Strings.mscx
-      Brassed_Up.mscx
-      Dawn.mscx
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}demos
+      TC1.1_CreateSimpleScore.js
+      TC1.2_CreateSimpleScoreWithRandomInstruments.js
+      TC2_CreateSimpleScoreByTemplate.js
+      TC3_UsingNoteInputToolbar.js
+      TC4_UsingPalettes.js
+      TC5_UsingInstruments.js
+      TC6_UsingInspector_Note.js
+      TC7_UsingExport.js
+      TC8_EngravingText.js
+      "TC9_BigScore(perfomance).js"
+      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts
       )
 
+# Steps
+install(FILES
+      steps/NewScore.js
+      steps/NoteInput.js
+      steps/Palette.js
+      steps/Score.js
+      steps/Instruments.js
+      steps/Inspector.js
+      steps/Navigation.js
+      steps/Home.js
+      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts/steps
+      )
+
+# Date
+install(FILES
+      data/Big_Score.mscz
+      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}autobotscripts/data
+      )
