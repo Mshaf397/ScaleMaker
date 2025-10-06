@@ -4,7 +4,7 @@
 # MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2025 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -18,30 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-if (MUE_INSTALL_SOUNDFONT)
-
-    if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/MS Basic.sf3")
-      install (FILES FluidR3Mono_GM.sf3
-          DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}sound
-          RENAME "MS Basic.sf3"
-          )
-    else ()
-      install(FILES
-          "MS Basic.sf3"
-          DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}sound
-          )
-    endif ()
-
-    if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/MS Basic_License.md")
-      install (FILES FluidR3Mono_License.md
-          DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}sound
-          RENAME "MS Basic_License.md")
-    else ()
-      install(FILES
-          "MS Basic_License.md"
-          DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}sound
-          )
-    endif ()
-
-endif (MUE_INSTALL_SOUNDFONT)
-
+install(FILES
+    16mm_MSN.mss
+    18mm_MSN.mss
+    20mm_MSN.mss
+    22mm_MSN.mss
+    25mm_MSN.mss
+    DESTINATION "${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}styles/Modified Stave Notation"
+)
