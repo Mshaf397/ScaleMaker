@@ -4,7 +4,7 @@
 # MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2021-2024 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -18,90 +18,454 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# adding or renaming templates here should also better be done in convert.json, 
-# but definitely need to get reflected in ../instruments/instrumentsxml.h,
-# like by running ../instruments/update_instruments_xml.py
+###########################################
+# Setup main application
+###########################################
 
-install(FILES
-      Marching_Bass_Drums.drm
-      Marching_Cymbals.drm
-      Marching_Snare_Drums.drm
-      Marching_Tenors.drm
-      drumset_fr.drm
-      orchestral.drm
-      My_First_Score.mscx
-      categories.json
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates
-      )
-install(DIRECTORY
-      01-General/01-Treble_Clef
-      01-General/02-Bass_Clef
-      01-General/03-Grand_Staff
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/01-General
-      )
+set(EXECUTABLE_NAME mscore)
 
-install(DIRECTORY
-      02-Choral/01-SATB
-      02-Choral/02-SATB_+_Organ
-      02-Choral/03-SATB_+_Piano
-      02-Choral/04-SATB_Closed_Score
-      02-Choral/05-SATB_Closed_Score_+_Organ
-      02-Choral/06-SATB_Closed_Score_+_Piano
-      02-Choral/07-Voice_+_Piano
-      02-Choral/08-Barbershop_Quartet_\(Men\)
-      02-Choral/09-Barbershop_Quartet_\(Women\)
-      02-Choral/10-Liturgical_Unmetrical
-      02-Choral/11-Liturgical_Unmetrical_+_Organ
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/02-Choral
-      )
+###########################################
+# Platform specific
+###########################################
+include(GetPlatformInfo)
+if (OS_IS_WIN)
+    set(EXECUTABLE_NAME ${MUSE_APP_NAME}${MUSE_APP_VERSION_MAJOR})
 
-install(DIRECTORY
-      03-Chamber_Music/01-String_Quartet
-      03-Chamber_Music/02-Wind_Quartet
-      03-Chamber_Music/03-Wind_Quintet
-      03-Chamber_Music/04-Saxophone_Quartet
-      03-Chamber_Music/05-Brass_Quartet
-      03-Chamber_Music/06-Brass_Quintet
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/03-Chamber_Music
-      )
+    include(GetCompilerInfo)
 
-install(DIRECTORY
-      04-Solo/01-Guitar
-      04-Solo/02-Guitar_+_Tablature
-      04-Solo/03-Guitar_Tablature
-      04-Solo/04-Piano
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/04-Solo
-      )
+    if (CC_IS_MSVC)
+        # MSVC recognizes a *.rc file and will invoke the resource compiler to link it
+        set(WINDOWS_ICONS_RC ${PROJECT_SOURCE_DIR}/share/icons/windows_icons.rc)
+    elseif(CC_IS_MINGW)
+        set(WINDOWS_ICONS_RC ${PROJECT_BINARY_DIR}/windows_icons_rc.o)
+        add_custom_command(
+            OUTPUT ${PROJECT_BINARY_DIR}/windows_icons_rc.o
+            COMMAND ${CMAKE_RC_COMPILER} -i windows_icons.rc -o ${PROJECT_BINARY_DIR}/windows_icons_rc.o
+            DEPENDS ${PROJECT_SOURCE_DIR}/share/icons/windows_icons.rc
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/share/icons
+            )
+        set_source_files_properties(${PROJECT_BINARY_DIR}/windows_icons_rc.o PROPERTIES generated true)
+    endif()
 
-install(DIRECTORY
-      05-Jazz/01-Jazz_Lead_Sheet
-      05-Jazz/02-Big_Band
-      05-Jazz/03-Jazz_Combo
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/05-Jazz
-      )
+elseif(OS_IS_LIN)
 
-install(DIRECTORY
-      06-Popular/01-Rock_Band
-      06-Popular/02-Bluegrass_Band
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/06-Popular
-      )
+    # add ssl support on local linux machine
+    # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L /usr/local/lib -lcrypto -lssl")
 
-install(DIRECTORY
-      07-Band_and_Percussion/01-Concert_Band
-      07-Band_and_Percussion/02-Small_Concert_Band
-      07-Band_and_Percussion/03-Brass_Band
-      07-Band_and_Percussion/04-Marching_Band
-      07-Band_and_Percussion/05-Small_Marching_Band
-      07-Band_and_Percussion/06-Battery_Percussion
-      07-Band_and_Percussion/07-Large_Pit_Percussion
-      07-Band_and_Percussion/08-Small_Pit_Percussion
-      07-Band_and_Percussion/09-European_Concert_Band
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/07-Band_and_Percussion
-      )
+    if (MUSE_APP_INSTALL_SUFFIX)
+        set(EXECUTABLE_NAME "${EXECUTABLE_NAME}${MUSE_APP_INSTALL_SUFFIX}")
+    endif(MUSE_APP_INSTALL_SUFFIX)
 
-install(DIRECTORY
-      08-Orchestral/01-Classical_Orchestra
-      08-Orchestral/02-Symphony_Orchestra
-      08-Orchestral/03-String_Orchestra
-      DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}templates/08-Orchestral
-      )
+    set(CMAKE_INSTALL_RPATH "${QT_INSTALL_LIBS}")
+    if (BUILD_SHARED_LIBS)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${SHARED_LIBS_INSTALL_DESTINATION}")
+    endif(BUILD_SHARED_LIBS)
+
+elseif(OS_IS_MAC)
+
+    set(MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER ${MUSE_APP_GUI_IDENTIFIER})
+    set(MACOSX_BUNDLE_BUNDLE_NAME ${MUSE_APP_TITLE})
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING ${MUSE_APP_VERSION})
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${MUSE_APP_VERSION})
+    set(MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_BUILD_NUMBER})
+    set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 1999-2025 MuseScore Limited. Published under the GNU General Public License version 3.")
+
+    set(CMAKE_INSTALL_RPATH ${QT_INSTALL_LIBS})
+    if (MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH)
+        list(PREPEND CMAKE_INSTALL_RPATH "${MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH}/lib")
+    endif()
+
+    message("MACOSX_BUNDLE_VERSION: ${MACOSX_BUNDLE_LONG_VERSION_STRING}.${MACOSX_BUNDLE_BUNDLE_VERSION}")
+
+elseif(OS_IS_WASM)
+
+    set(EXECUTABLE_NAME MuseScoreStudio)
+
+elseif(OS_IS_FBSD)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L /usr/local/lib -lasound -lpthread")
+
+    set(CMAKE_INSTALL_RPATH "${QT_INSTALL_LIBS}")
+    if (BUILD_SHARED_LIBS)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${SHARED_LIBS_INSTALL_DESTINATION}")
+    endif(BUILD_SHARED_LIBS)
+else()
+    message(FATAL_ERROR "Unsupported Platform: ${CMAKE_HOST_SYSTEM_NAME}")
+endif()
+
+###########################################
+# Dependency library declaration
+###########################################
+set(LINK_LIB
+
+    # Always needed by everyone
+    ${QT_LIBRARIES}
+    muse::global
+    muse::draw
+    muse::actions
+
+    # have stub, links real or stub
+    muse::network
+    muse::vst
+    muse::update
+    muse::accessibility
+    muse::shortcuts
+    muse::workspace
+    muse::audio
+    muse::mpe
+    muse::midi
+    muse::learn
+    muse::tours
+    muse::multiinstances
+    muse::cloud
+    muse::languages
+    muse::extensions
+
+    braille
+    muse::diagnostics
+    engraving
+    context
+    notation
+    project
+    commonscene
+    palette
+    inspector
+    playback
+    instrumentsscene
+    musesounds
+    )
+
+macro(add_to_link_if_enabled opt lib)
+    if (${opt})
+        list(APPEND LINK_LIB ${lib})
+    endif()
+endmacro()
+
+add_to_link_if_enabled(${MUSE_MODULE_AUTOBOT} muse::autobot)
+add_to_link_if_enabled(${MUSE_MODULE_AUDIOPLUGINS} muse::audioplugins)
+add_to_link_if_enabled(${MUSE_MODULE_MUSESAMPLER} muse::musesampler)
+add_to_link_if_enabled(${MUSE_MODULE_UI} muse::ui)
+add_to_link_if_enabled(${MUSE_MODULE_UI} muse::uicomponents)
+add_to_link_if_enabled(${MUSE_MODULE_DOCKWINDOW} muse::dockwindow)
+
+add_to_link_if_enabled(${MUE_BUILD_APPSHELL_MODULE} appshell)
+add_to_link_if_enabled(${MUE_BUILD_CONVERTER_MODULE} converter)
+add_to_link_if_enabled(${MUE_BUILD_PRINT_MODULE} print)
+
+if (MUE_BUILD_IMPEXP_BB_MODULE)
+    list(APPEND LINK_LIB iex_bb)
+endif ()
+if (MUE_BUILD_IMPEXP_BWW_MODULE)
+    list(APPEND LINK_LIB iex_bww)
+endif ()
+if (MUE_BUILD_IMPEXP_CAPELLA_MODULE)
+    list(APPEND LINK_LIB iex_capella)
+endif ()
+if (MUE_BUILD_IMPEXP_MIDI_MODULE)
+    list(APPEND LINK_LIB iex_midi)
+endif ()
+if (MUE_BUILD_IMPEXP_MUSEDATA_MODULE)
+    list(APPEND LINK_LIB iex_musedata)
+endif ()
+if (MUE_BUILD_IMPEXP_MUSICXML_MODULE)
+    list(APPEND LINK_LIB iex_musicxml)
+endif ()
+if (MUE_BUILD_IMPEXP_OVE_MODULE)
+    list(APPEND LINK_LIB iex_ove)
+endif ()
+if (MUE_BUILD_IMPEXP_AUDIOEXPORT_MODULE)
+    list(APPEND LINK_LIB iex_audioexport)
+endif ()
+if (MUE_BUILD_IMPEXP_IMAGESEXPORT_MODULE)
+    list(APPEND LINK_LIB iex_imagesexport)
+endif ()
+if (MUE_BUILD_IMPEXP_GUITARPRO_MODULE)
+    list(APPEND LINK_LIB iex_guitarpro)
+endif ()
+if (MUE_BUILD_IMPEXP_MEI_MODULE)
+    list(APPEND LINK_LIB iex_mei)
+endif ()
+if (MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE)
+    list(APPEND LINK_LIB iex_videoexport)
+endif ()
+if (MUE_BUILD_IMPEXP_TABLEDIT_MODULE)
+    list(APPEND LINK_LIB iex_tabledit)
+endif ()
+
+set (MSCORE_APPEND_SRC)
+
+if (OS_IS_WIN)
+    list(APPEND MSCORE_APPEND_SRC ${WINDOWS_ICONS_RC})
+endif()
+
+if (MUE_CONFIGURATION_IS_APPWEB)
+    list(APPEND LINK_LIB appjs)
+endif()
+
+###########################################
+# Resources
+###########################################
+qt_add_resources(APP_RCC_SOURCES app.qrc)
+if (OS_IS_WIN)
+    qt_add_resources(APP_RCC_SOURCES app_win.qrc)
+endif()
+
+###########################################
+# Executable declaration
+###########################################
+set(APP_SRC
+    main.cpp
+    cmdoptions.h
+    appfactory.cpp
+    appfactory.h
+
+    internal/guiapp.cpp
+    internal/guiapp.h
+)
+
+if (MUE_ENABLE_CONSOLEAPP)
+    set(APP_SRC ${APP_SRC}
+        internal/commandlineparser.cpp
+        internal/commandlineparser.h
+        internal/consoleapp.cpp
+        internal/consoleapp.h
+    )
+endif()
+
+if (CC_IS_EMCC)
+    set(APP_SRC ${APP_SRC} webapi_export.cpp)
+endif()
+
+qt_add_executable(MuseScoreStudio
+    WIN32 MACOSX_BUNDLE
+    ${APP_RCC_SOURCES}
+    ${MSCORE_APPEND_SRC}
+    ${APP_SRC}
+)
+
+###########################################
+# Setting target properties
+###########################################
+
+set_target_properties(MuseScoreStudio PROPERTIES OUTPUT_NAME ${EXECUTABLE_NAME})
+
+if (MUSE_ENABLE_UNIT_TESTS_CODE_COVERAGE)
+    set(COVERAGE_FLAGS -fprofile-arcs -ftest-coverage --coverage)
+    set(COVERAGE_LINK_FLAGS -lgcov --coverage)
+    target_compile_options(MuseScoreStudio PRIVATE ${COVERAGE_FLAGS})
+    target_link_options(MuseScoreStudio PRIVATE ${COVERAGE_LINK_FLAGS})
+endif()
+
+if (OS_IS_MAC)
+    set_target_properties(MuseScoreStudio PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/buildscripts/packaging/macOS/Info.plist.in
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${MACOSX_BUNDLE_GUI_IDENTIFIER})
+endif (OS_IS_MAC)
+
+if (CC_IS_MINGW)
+    if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
+        set_target_properties(MuseScoreStudio PROPERTIES LINK_FLAGS "-mwindows -mconsole")
+    else (CMAKE_BUILD_TYPE MATCHES "DEBUG")
+        set_target_properties(MuseScoreStudio PROPERTIES LINK_FLAGS "-Wl,-S -mwindows")
+    endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
+endif(CC_IS_MINGW)
+
+if (CC_IS_MSVC)
+    target_link_options(MuseScoreStudio PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
+endif(CC_IS_MSVC)
+
+###########################################
+# Includes
+###########################################
+
+target_include_directories(MuseScoreStudio PRIVATE
+    ${PROJECT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+
+    ${PROJECT_SOURCE_DIR}/src
+
+    ${MUSE_FRAMEWORK_PATH}
+    ${MUSE_FRAMEWORK_PATH}/framework
+    ${MUSE_FRAMEWORK_PATH}/framework/global
+
+    # compat
+    ${MUSE_FRAMEWORK_PATH}/src
+    ${MUSE_FRAMEWORK_PATH}/src/framework
+    ${MUSE_FRAMEWORK_PATH}/src/framework/global
+    # end compat
+)
+
+###########################################
+# Link
+###########################################
+
+target_link_libraries(MuseScoreStudio PRIVATE ${LINK_LIB} ${COVERAGE_LINK_FLAGS})
+
+if (CC_IS_EMCC)
+    include(exported_functions.cmake)
+    target_link_options(MuseScoreStudio PRIVATE ${EMCC_LINKER_FLAGS})
+    target_link_options(MuseScoreStudio PRIVATE ${EXPORTED_FUNCTIONS})
+endif()
+
+
+###########################################
+# INSTALL
+###########################################
+
+install(TARGETS MuseScoreStudio
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION bin
+)
+
+###########################################
+# Windows
+###########################################
+if (OS_IS_WIN)
+    include(GetCompilerInfo)
+
+    if (CC_IS_MINGW)
+        get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+        get_filename_component (MINGW_ROOT ${COMPILER_DIR} DIRECTORY)
+
+        install( FILES
+               ${MINGW_ROOT}/bin/libgcc_s_seh-1.dll
+               ${MINGW_ROOT}/bin/libstdc++-6.dll
+               ${MINGW_ROOT}/bin/libwinpthread-1.dll
+               DESTINATION bin)
+
+    endif(CC_IS_MINGW)
+
+    if (SNDFILE_DLL)
+        install(FILES ${SNDFILE_DLL} DESTINATION bin)
+    endif()
+
+    # Install ssl
+    install(FILES
+            ${DEPENDENCIES_LIB_DIR}/libcrypto-1_1-x64.dll
+            ${DEPENDENCIES_LIB_DIR}/libssl-1_1-x64.dll
+            DESTINATION bin)
+
+    if (WIN_PORTABLE)
+        # deploy the files and directory structure needed for the PortableApps.com format
+        install(DIRECTORY ${PROJECT_SOURCE_DIR}/buildscripts/packaging/Windows/PortableApps/App DESTINATION ${CMAKE_INSTALL_PREFIX}/../..)
+        install(DIRECTORY ${PROJECT_SOURCE_DIR}/buildscripts/packaging/Windows/PortableApps/Other DESTINATION ${CMAKE_INSTALL_PREFIX}/../..)
+        install(FILES ${PROJECT_SOURCE_DIR}/buildscripts/packaging/Windows/PortableApps/help.html DESTINATION ${CMAKE_INSTALL_PREFIX}/../..)
+        configure_file(${PROJECT_SOURCE_DIR}/buildscripts/packaging/Windows/PortableApps/appinfo.ini.in     ${CMAKE_INSTALL_PREFIX}/../../App/AppInfo/appinfo.ini   @ONLY)
+    endif (WIN_PORTABLE)
+
+    set(deploy_tool_options_arg "--plugindir bin --qmldir ${PROJECT_SOURCE_DIR}")
+
+    qt_generate_deploy_qml_app_script(
+        TARGET MuseScoreStudio
+        OUTPUT_SCRIPT deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR
+        DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
+    )
+
+    install(SCRIPT ${deploy_script})
+
+###########################################
+# Linux
+###########################################
+elseif(OS_IS_LIN)
+    # Install mscore executable (package maintainers may add "MuseScore" and/or "musescore" aliases that symlink to mscore)
+    if (LN_EXECUTABLE)
+       add_custom_target(mscore_alias ALL
+           COMMAND echo "Creating symlink alias for mscore executable."
+           COMMAND ${LN_EXECUTABLE} -sf "mscore${MUSE_APP_INSTALL_SUFFIX}" "musescore${MUSE_APP_INSTALL_SUFFIX}"
+           COMMAND echo 'Symlink alias: musescore${MUSE_APP_INSTALL_SUFFIX} -> mscore${MUSE_APP_INSTALL_SUFFIX}'
+           )
+       install(FILES ${PROJECT_BINARY_DIR}/src/app/musescore${MUSE_APP_INSTALL_SUFFIX} DESTINATION bin)
+    else (LN_EXECUTABLE)
+       add_custom_target(mscore_alias ALL COMMAND echo "No symlink aliases will be created." VERBATIM )
+    endif (LN_EXECUTABLE)
+
+elseif(OS_IS_FBSD)
+###########################################
+# FreeBSD
+###########################################
+    add_custom_target(mscore_alias ALL
+           COMMAND echo "Creating symlink alias for mscore executable."
+           COMMAND ln -sfv "mscore" "musescore"
+           )
+   install(FILES ${PROJECT_BINARY_DIR}/src/app/musescore DESTINATION bin)
+
+###########################################
+# macOS
+###########################################
+elseif(OS_IS_MAC)
+    install(FILES
+            ${PROJECT_SOURCE_DIR}/fonts/bravura/BravuraText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/campania/Campania.otf
+            ${PROJECT_SOURCE_DIR}/fonts/edwin/Edwin-BdIta.otf
+            ${PROJECT_SOURCE_DIR}/fonts/edwin/Edwin-Bold.otf
+            ${PROJECT_SOURCE_DIR}/fonts/edwin/Edwin-Italic.otf
+            ${PROJECT_SOURCE_DIR}/fonts/edwin/Edwin-Roman.otf
+            ${PROJECT_SOURCE_DIR}/fonts/gootville/GootvilleText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/FreeSans.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/FreeSerif.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/FreeSerifBold.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/FreeSerifItalic.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/FreeSerifBoldItalic.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/leland/Leland.otf
+            ${PROJECT_SOURCE_DIR}/fonts/leland/LelandText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/mscore-BC.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/mscoreTab.ttf
+            ${PROJECT_SOURCE_DIR}/fonts/mscore/MScoreText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/musejazz/MuseJazzText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/petaluma/PetalumaScript.otf
+            ${PROJECT_SOURCE_DIR}/fonts/petaluma/PetalumaText.otf
+            ${PROJECT_SOURCE_DIR}/fonts/finalemaestro/FinaleMaestroText-Regular.otf
+            ${PROJECT_SOURCE_DIR}/fonts/finalebroadway/FinaleBroadwayText.otf
+            DESTINATION ${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}fonts
+    )
+
+###########################################
+# Wasm
+###########################################
+elseif(OS_IS_WASM)
+
+    add_custom_command(
+        TARGET MuseScoreStudio
+        POST_BUILD
+        COMMAND node ${PROJECT_SOURCE_DIR}/src/web/appjs/install.js ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${MUSE_MODULE_AUDIO_WORKER}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Install js api..."
+    )
+
+else()
+    message(FATAL_ERROR "Unsupported Platform: ${CMAKE_HOST_SYSTEM_NAME}")
+endif()
+
+
+#################################################
+# Miscellaneous Microsoft Visual Studio settings
+#################################################
+if (MSVC)
+    # Add a post-build event to deploy the application to the output folder. Same as building the INSTALL target.
+    STRING(TOUPPER ${CMAKE_GENERATOR} UPPER_CMAKE_GENERATOR)
+    if (${UPPER_CMAKE_GENERATOR} MATCHES "VISUAL STUDIO")
+        # We want $(Configuration) passed verbatim. Note the round brackets.
+        set(CONFIG_STR "$(Configuration)")
+
+        add_custom_command(
+            TARGET MuseScoreStudio POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -DBUILD_TYPE=${CONFIG_STR} -P cmake_install.cmake
+            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+            VERBATIM
+        )
+    endif()
+
+    # Force the "install" and "package" targets not to depend on the "all" target.
+    set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
+    set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY true)
+
+    # Set the startup project to "MuseScoreStudio".
+    set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT MuseScoreStudio)
+
+    # Set the debugging properties for the "MuseScoreStudio" project.
+    file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/bin" VS_DEBUGGER_WORKING_DIRECTORY)
+    set_target_properties(MuseScoreStudio PROPERTIES VS_DEBUGGER_COMMAND "${VS_DEBUGGER_WORKING_DIRECTORY}\\${EXECUTABLE_NAME}${CMAKE_EXECUTABLE_SUFFIX}")
+    set_target_properties(MuseScoreStudio PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${VS_DEBUGGER_WORKING_DIRECTORY}")
+    set_target_properties(MuseScoreStudio PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--debug")
+endif (MSVC)
